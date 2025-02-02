@@ -255,6 +255,37 @@
       margin: 0.5rem 0;
     }
   </style>
+   <script>
+    // ... [Todo el código original del script] ...
+
+    // ========== AÑADE ESTAS 2 FUNCIONES AL FINAL DEL SCRIPT ==========
+    function initializeStorage() {
+        for (let month = 0; month < 12; month++) {
+            const lastDay = new Date(2025, month + 1, 0).getDate();
+            for (let day = 1; day <= lastDay; day++) {
+                const fecha = `2025-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                if (!localStorage.getItem(fecha)) {
+                    localStorage.setItem(fecha, '');
+                }
+            }
+        }
+    }
+
+    function resetStorage() {
+        if (confirm("¿Borrar todos los turnos asignados?")) {
+            localStorage.clear();
+            initializeStorage();
+            renderCalendar();
+            alert("¡Calendario reiniciado!");
+        }
+    }
+
+    // Inicializar al cargar la página
+    window.addEventListener('DOMContentLoaded', () => {
+        initializeStorage();
+        renderCalendar();
+    });
+</script>
 
   <div class="controls">
     <div class="month-nav">

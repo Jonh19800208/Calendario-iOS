@@ -717,7 +717,11 @@
     function saveMonth() {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
-      const monthData = [];
+      const monthData = {
+        year: year,
+        month: month + 1,
+        days: []
+      };
       
       // Collect all data for the current month
       for (let day = 1; day <= 31; day++) {
@@ -726,7 +730,7 @@
           const fecha = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
           const turno = localStorage.getItem(fecha);
           if (turno) {
-            monthData.push({
+            monthData.days.push({
               fecha,
               turno
             });
@@ -734,29 +738,73 @@
         }
       }
       
-      // Save to localStorage with month-specific key
+      // Save to localStorage as JSON with month-specific key
       const monthKey = `calendar-${year}-${month + 1}`;
-      localStorage.setItem(monthKey, JSON.stringify(monthData));
       
-      // Show save notification
-      const notification = document.getElementById('saveNotification');
-      notification.style.display = 'block';
-      setTimeout(() => {
-        notification.style.display = 'none';
-      }, 2000);
+      try {
+        // Save the current month data
+        localStorage.setItem(monthKey, JSON.stringify(monthData));
+        
+        // Also save to a complete calendar JSON that contains all months
+        let fullCalendar = localStorage.getItem('full-calendar-2025');
+        if (fullCalendar) {
+          fullCalendar = JSON.parse(fullCalendar);
+        } else {
+          fullCalendar = {
+            year: 2025,
+            months: {}
+          };
+        }
+        
+        // Update or add the current month data
+        fullCalendar.months[month + 1] = monthData;
+        
+        // Save the complete calendar back to localStorage
+        localStorage.setItem('full-calendar-2025', JSON.stringify(fullCalendar));
+        
+        // Show save notification
+        const notification = document.getElementById('saveNotification');
+        notification.style.display = 'block';
+        setTimeout(() => {
+          notification.style.display = 'none';
+        }, 2000);
+        
+      } catch (error) {
+        console.error('Error saving calendar data:', error);
+        alert('Error al guardar los datos del calendario');
+      }
     }
 
     function loadMonth() {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
-      const monthKey = `calendar-${year}-${month + 1}`;
       
-      const savedData = localStorage.getItem(monthKey);
-      if (savedData) {
-        const monthData = JSON.parse(savedData);
-        monthData.forEach(item => {
-          localStorage.setItem(item.fecha, item.turno);
-        });
+      try {
+        // First try to load from the complete calendar
+        let fullCalendar = localStorage.getItem('full-calendar-2025');
+        if (fullCalendar) {
+          fullCalendar = JSON.parse(fullCalendar);
+          const monthData = fullCalendar.months[month + 1];
+          
+          if (monthData) {
+            monthData.days.forEach(item => {
+              localStorage.setItem(item.fecha, item.turno);
+            });
+          }
+        } else {
+          // Fallback to loading individual month data
+          const monthKey = `calendar-${year}-${month + 1}`;
+          const savedData = localStorage.getItem(monthKey);
+          
+          if (savedData) {
+            const monthData = JSON.parse(savedData);
+            monthData.days.forEach(item => {
+              localStorage.setItem(item.fecha, item.turno);
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading calendar data:', error);
       }
       
       renderCalendar();

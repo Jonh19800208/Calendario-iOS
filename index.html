@@ -469,6 +469,48 @@
         hours: 152
       }
     };
+    function asignarTurno(select, fecha) {
+  const turno = select.value;
+  // ... 
+  localStorage.setItem(fecha, turno); // Guarda el turno de la fecha
+  updateSummary();
+}
+    function saveCalendarData() {
+  const calendarData = {};
+  
+  // Recopila todos los días del año
+  for (let month = 0; month < 12; month++) {
+    for (let day = 1; day <= 31; day++) {
+      const date = new Date(2025, month, day);
+      if (date.getMonth() === month) {
+        const fecha = `2025-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const turno = localStorage.getItem(fecha);
+        if (turno) calendarData[fecha] = turno;
+      }
+    }
+  }
+      function loadCalendarData() {
+  const savedData = localStorage.getItem('calendarData2025');
+  if (savedData) {
+    const calendarData = JSON.parse(savedData);
+    // Restaura cada fecha
+    Object.entries(calendarData).forEach(([fecha, turno]) => {
+      localStorage.setItem(fecha, turno);
+    });
+  }
+}
+
+// Al cargar la página
+loadCalendarData();
+renderCalendar();
+
+  localStorage.setItem('calendarData2025', JSON.stringify(calendarData)); // Guarda como JSON
+  // Muestra confirmación
+  document.getElementById('saveStatus').classList.add('visible');
+  setTimeout(() => {
+    document.getElementById('saveStatus').classList.remove('visible');
+  }, 2000);
+}
 
     function updateSummary() {
       const year = currentDate.getFullYear();

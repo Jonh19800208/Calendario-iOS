@@ -64,3 +64,64 @@ document.getElementById('guardarCambios').addEventListener('click', guardarCambi
 
 // Cargar datos al cargar la página
 window.addEventListener('DOMContentLoaded', cargarDatos);
+document.getElementById('saveButton').addEventListener('click', async () => {
+    try {
+        // Datos del calendario (pueden ser dinámicos)
+        const data = {
+            resumenMensual: {
+                mañanas: 0,
+                tardes: 0,
+                noches: 0,
+                adelantos: 0,
+                vacaciones: 0,
+                flexibilidad: 0,
+                total: 0,
+                diasVacacionesRestantes: 22,
+                diasTrabajadosFinDeSemana: 0,
+                diasBaja: 0
+            },
+            resumenAnual: {
+                mañanas: 0,
+                tardes: 0,
+                noches: 0,
+                adelantos: 0,
+                vacaciones: 0,
+                flexibilidad: 0,
+                totalDiasTrabajados: 0,
+                totalDiasVacacionesUsados: 0,
+                totalDiasTrabajadosFinDeSemana: 0,
+                totalDiasBaja: 0
+            }
+        };
+
+        // Convertir los datos a JSON
+        const jsonData = JSON.stringify(data, null, 2);
+
+        // Crear un objeto Blob con los datos
+        const blob = new Blob([jsonData], { type: 'application/json' });
+
+        // Usar showSaveFilePicker para guardar el archivo en iCloud
+        const [fileHandle] = await window.showSaveFilePicker({
+            suggestedName: 'calendario-laboral-2025.json',
+            types: [{
+                description: 'JSON File',
+                accept: { 'application/json': ['.json'] }
+            }]
+        });
+
+        // Crear un writable stream
+        const writableStream = await fileHandle.createWritable();
+
+        // Escribir los datos en el archivo
+        await writableStream.write(blob);
+
+        // Cerrar el stream
+        await writableStream.close();
+
+        // Mostrar mensaje de éxito
+        document.getElementById('statusMessage').textContent = '✓ Guardado correctamente en iCloud';
+    } catch (error) {
+        // Mostrar mensaje de error
+        document.getElementById('statusMessage').textContent = 'Error al guardar: ' + error.message;
+    }
+});

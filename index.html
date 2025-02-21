@@ -1,73 +1,6 @@
 <html>
 <head>
   <title>Calendario Laboral 2025</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="script.js" defer></script>
-  <script>
-    // Función para guardar datos en localStorage
-    function guardarDatos() {
-        const resumenMes = {
-            mañanas: parseInt(document.getElementById('mañanas').value) || 0,
-            tardes: parseInt(document.getElementById('tardes').value) || 0,
-            noches: parseInt(document.getElementById('noches').value) || 0,
-            adelantos: parseInt(document.getElementById('adelantos').value) || 0,
-            vacaciones: parseInt(document.getElementById('vacaciones').value) || 0,
-            flexibilidad: parseInt(document.getElementById('flexibilidad').value) || 0,
-            total: document.getElementById('total').innerText
-        };
-
-        const resumenAnual = {
-            mañanas: parseInt(document.getElementById('mañanas-anual').value) || 0,
-            tardes: parseInt(document.getElementById('tardes-anual').value) || 0,
-            noches: parseInt(document.getElementById('noches-anual').value) || 0,
-            adelantos: parseInt(document.getElementById('adelantos-anual').value) || 0,
-            vacaciones: parseInt(document.getElementById('vacaciones-anual').value) || 0,
-            flexibilidad: parseInt(document.getElementById('flexibilidad-anual').value) || 0,
-            totalDiasTrabajados: parseInt(document.getElementById('total-dias-trabajados').value) || 0,
-            totalDiasVacacionesUsados: parseInt(document.getElementById('total-dias-vacaciones-usados').value) || 0,
-            totalDiasTrabajadosFinSemana: parseInt(document.getElementById('total-dias-trabajados-fin-semana').value) || 0,
-            totalDiasBaja: parseInt(document.getElementById('total-dias-baja').value) || 0
-        };
-
-        // Guardar en localStorage
-        localStorage.setItem('resumenMes', JSON.stringify(resumenMes));
-        localStorage.setItem('resumenAnual', JSON.stringify(resumenAnual));
-
-        alert('Datos guardados correctamente.');
-    }
-
-    // Función para cargar datos desde localStorage
-    function cargarDatos() {
-        const resumenMesGuardado = JSON.parse(localStorage.getItem('resumenMes'));
-        const resumenAnualGuardado = JSON.parse(localStorage.getItem('resumenAnual'));
-
-        if (resumenMesGuardado) {
-            document.getElementById('mañanas').value = resumenMesGuardado.mañanas;
-            document.getElementById('tardes').value = resumenMesGuardado.tardes;
-            document.getElementById('noches').value = resumenMesGuardado.noches;
-            document.getElementById('adelantos').value = resumenMesGuardado.adelantos;
-            document.getElementById('vacaciones').value = resumenMesGuardado.vacaciones;
-            document.getElementById('flexibilidad').value = resumenMesGuardado.flexibilidad;
-            document.getElementById('total').innerText = resumenMesGuardado.total;
-        }
-
-        if (resumenAnualGuardado) {
-            document.getElementById('mañanas-anual').value = resumenAnualGuardado.mañanas;
-            document.getElementById('tardes-anual').value = resumenAnualGuardado.tardes;
-            document.getElementById('noches-anual').value = resumenAnualGuardado.noches;
-            document.getElementById('adelantos-anual').value = resumenAnualGuardado.adelantos;
-            document.getElementById('vacaciones-anual').value = resumenAnualGuardado.vacaciones;
-            document.getElementById('flexibilidad-anual').value = resumenAnualGuardado.flexibilidad;
-            document.getElementById('total-dias-trabajados').value = resumenAnualGuardado.totalDiasTrabajados;
-            document.getElementById('total-dias-vacaciones-usados').value = resumenAnualGuardado.totalDiasVacacionesUsados;
-            document.getElementById('total-dias-trabajados-fin-semana').value = resumenAnualGuardado.totalDiasTrabajadosFinSemana;
-            document.getElementById('total-dias-baja').value = resumenAnualGuardado.totalDiasBaja;
-        }
-    }
-
-    // Cargar datos al cargar la página
-    window.onload = cargarDatos;
-</script>
   <meta charset="UTF-8">
   <style>
     :root {
@@ -359,7 +292,6 @@
       align-items: center;
       margin-top: 5px;
     }
-   
   </style>
 
   <div class="controls">
@@ -537,48 +469,6 @@
         hours: 152
       }
     };
-    function asignarTurno(select, fecha) {
-  const turno = select.value;
-  // ... 
-  localStorage.setItem(fecha, turno); // Guarda el turno de la fecha
-  updateSummary();
-}
-    function saveCalendarData() {
-  const calendarData = {};
-  
-  // Recopila todos los días del año
-  for (let month = 0; month < 12; month++) {
-    for (let day = 1; day <= 31; day++) {
-      const date = new Date(2025, month, day);
-      if (date.getMonth() === month) {
-        const fecha = `2025-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const turno = localStorage.getItem(fecha);
-        if (turno) calendarData[fecha] = turno;
-      }
-    }
-  }
-      function loadCalendarData() {
-  const savedData = localStorage.getItem('calendarData2025');
-  if (savedData) {
-    const calendarData = JSON.parse(savedData);
-    // Restaura cada fecha
-    Object.entries(calendarData).forEach(([fecha, turno]) => {
-      localStorage.setItem(fecha, turno);
-    });
-  }
-}
-
-// Al cargar la página
-loadCalendarData();
-renderCalendar();
-
-  localStorage.setItem('calendarData2025', JSON.stringify(calendarData)); // Guarda como JSON
-  // Muestra confirmación
-  document.getElementById('saveStatus').classList.add('visible');
-  setTimeout(() => {
-    document.getElementById('saveStatus').classList.remove('visible');
-  }, 2000);
-}
 
     function updateSummary() {
       const year = currentDate.getFullYear();
@@ -873,6 +763,5 @@ renderCalendar();
 
 </head>
 <body>
-  
 </body>
 </html>

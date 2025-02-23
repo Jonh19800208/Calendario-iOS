@@ -680,26 +680,7 @@
 
 </head>
 <body>
-Para que los cambios en los turnos persistan incluso después de borrar el historial o los datos del navegador, necesitamos modificar el código para usar IndexedDB en lugar de localStorage, ya que IndexedDB ofrece un almacenamiento más robusto y persistente. A continuación, te proporciono una versión modificada del código que reemplaza localStorage por IndexedDB para guardar y cargar los datos de los turnos.
-Cambios principales:
 
-    Uso de IndexedDB: Se reemplazan las operaciones de localStorage (setItem y getItem) por funciones que interactúan con IndexedDB.
-    Persistencia: Los datos en IndexedDB no se ven afectados por el borrado del historial o caché del navegador, a menos que se borren explícitamente los datos del sitio.
-    Carga inicial: Los datos se cargan desde IndexedDB al renderizar el calendario.
-    Actualización dinámica: Cada vez que se cambia un turno, se guarda en IndexedDB.
-
-Aquí está el código modificado:
-html
-<html>
-<head>
-  <title>Calendario Laboral 2025</title>
-  <meta charset="UTF-8">
-  <!-- El CSS se mantiene igual, no requiere cambios -->
-  <style>
-    /* Tu CSS original aquí */
-  </style>
-</head>
-<body>
   <div class="controls">
     <!-- Controles y leyenda sin cambios -->
   </div>

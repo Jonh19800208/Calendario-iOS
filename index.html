@@ -254,6 +254,21 @@
       font-weight: 600;
       margin: 0.5rem 0;
     }
+    .controls button {
+      padding: 3px 5px;
+      font-size: 0.8rem;
+      border-radius: 4px;
+      border: 1px solid red;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: red;
+      margin: 0 5px;
+    }
+    .controls button:hover {
+      background: #ffe6e6;
+      color: darkred;
+    }
   </style>
 
   <div class="controls">
@@ -680,9 +695,20 @@
 
 </head>
 <body>
-
-  <div class="controls">
-    <!-- Controles y leyenda sin cambios -->
+<div class="controls">
+    <div class="month-nav">
+      <button onclick="prevMonth()">Anterior</button>
+      <h2 id="currentMonth">Enero 2025</h2>
+      <button onclick="nextMonth()">Siguiente</button>
+    </div>
+    <!-- Botones nuevos para guardar y cargar -->
+    <div style="text-align: center; margin-top: 5px;">
+      <button onclick="saveAllToIndexedDB()">Guardar en IndexedDB</button>
+      <button onclick="loadAllFromIndexedDB()">Cargar desde IndexedDB</button>
+    </div>
+    <div class="legend">
+      <!-- Leyenda sin cambios -->
+    </div>
   </div>
   <div id="calendar" class="calendar"></div>
   <div id="summary" class="summary">
@@ -693,7 +719,6 @@
   </div>
 
   <script>
-    // Configuración de IndexedDB
     const dbName = 'calendarioDB';
     const storeName = 'turnosData';
     let db;
@@ -722,7 +747,7 @@
       });
     }
 
-    // Guardar turno en IndexedDB
+    // Guardar un turno individual en IndexedDB
     async function saveTurnoToIndexedDB(fecha, turno) {
       const db = await initIndexedDB();
       const transaction = db.transaction([storeName], 'readwrite');
@@ -735,7 +760,7 @@
       });
     }
 
-    // Cargar turno desde IndexedDB
+    // Cargar un turno individual desde IndexedDB
     async function loadTurnoFromIndexedDB(fecha) {
       const db = await initIndexedDB();
       const transaction = db.transaction([storeName], 'readonly');
@@ -748,23 +773,70 @@
       });
     }
 
-    // Cargar todos los turnos desde IndexedDB
-    async function loadAllTurnosFromIndexedDB() {
+    // Guardar todos los turnos actuales en IndexedDB
+    async function saveAllToIndexedDB() {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const lastDay = new Date(year, month + 1, 0).getDate();
+
+      const db = await initIndexedDB();
+      const transaction = db.transaction([storeName], 'readwrite');
+      const objectStore = transaction.objectStore(storeName);
+
+      for (let day = 1; day <= lastDay; day++) {
+        const fecha = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const select = document.querySelector(`select[onchange="asignarTurno(this, '${fecha}')"]`);
+        if (select) {
+          const turno = select.value;
+          objectStore.put({ fecha, turno });
+        }
+      }
+
+      transaction.oncomplete = () => {
+        alert('Datos guardados en IndexedDB con éxito');
+      };
+      transaction.onerror = (event) => {
+        console.error('Error al guardar todos los datos:', event.target.error);
+        alert('Error al guardar en IndexedDB');
+      };
+    }
+
+    // Cargar todos los turnos desde IndexedDB y actualizar el calendario
+    async function loadAllFromIndexedDB() {
       const db = await initIndexedDB();
       const transaction = db.transaction([storeName], 'readonly');
       const objectStore = transaction.objectStore(storeName);
       const request = objectStore.getAll();
 
-      return new Promise((resolve, reject) => {
-        request.onsuccess = () => {
-          const turnos = {};
-          request.result.forEach(item => {
-            turnos[item.fecha] = item.turno;
-          });
-          resolve(turnos);
-        };
-        request.onerror = (event) => reject(event.target.error);
-      });
+      request.onsuccess = async () => {
+        const turnos = request.result.reduce((acc, item) => {
+          acc[item.fecha] = item.turno;
+          return acc;
+        }, {});
+
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const lastDay = new Date(year, month + 1, 0).getDate();
+
+        for (let day = 1; day <= lastDay; day++) {
+          const fecha = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const select = document.querySelector(`select[onchange="asignarTurno(this, '${fecha}')"]`);
+          if (select && turnos[fecha] !== undefined) {
+            select.value = turnos[fecha];
+            const dayContent = select.parentElement;
+            dayContent.className = 'day-content';
+            if (turnos[fecha]) dayContent.classList.add(`turno-${turnos[fecha].toLowerCase()}`);
+            select.style.backgroundColor = getTurnoColor(turnos[fecha]);
+          }
+        }
+        await updateSummary();
+        alert('Datos cargados desde IndexedDB con éxito');
+      };
+
+      request.onerror = (event) => {
+        console.error('Error al cargar todos los datos:', event.target.error);
+        alert('Error al cargar desde IndexedDB');
+      };
     }
 
     const festivos2025 = ['2025-01-01', '2025-01-06', '2025-03-19', '2025-04-18', '2025-04-21', '2025-05-01', '2025-08-15', '2025-10-09', '2025-10-12', '2025-11-01', '2025-12-06', '2025-12-25'];
@@ -802,13 +874,14 @@
         const date = new Date(year, month, day);
         if (date.getMonth() === month) {
           const fecha = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          const turno = await loadTurnoFromIndexedDB(fecha);
-          
+          const select = document.querySelector(`select[onchange="asignarTurno(this, '${fecha}')"]`);
+          const turno = select ? select.value : await loadTurnoFromIndexedDB(fecha);
+
           const isWeekend = [0, 6].includes(date.getDay());
           if (isWeekend && turno && turno !== '' && turno !== 'V' && turno !== 'B' && turno !== 'LPF') {
             weekendDays++;
           }
-          
+
           if (turno && counts.hasOwnProperty(turno)) {
             counts[turno]++;
           }
@@ -857,12 +930,12 @@
           if (date.getMonth() === month) {
             const fecha = `2025-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const turno = await loadTurnoFromIndexedDB(fecha);
-            
+
             const isWeekend = [0, 6].includes(date.getDay());
             if (isWeekend && turno && turno !== '' && turno !== 'V' && turno !== 'B' && turno !== 'LPF') {
               totalWeekendDays++;
             }
-            
+
             if (turno && counts.hasOwnProperty(turno)) {
               counts[turno]++;
             }
@@ -913,7 +986,7 @@
         year: 'numeric'
       }).format(currentDate);
       document.getElementById('currentMonth').textContent = monthName.charAt(0).toUpperCase() + monthName.slice(1);
-      
+
       const calendar = document.getElementById('calendar');
       calendar.innerHTML = '';
       diasSemana.forEach(dia => {
@@ -997,7 +1070,7 @@
       dayContent.className = 'day-content';
       if (turno) dayContent.classList.add(`turno-${turno.toLowerCase()}`);
       select.style.backgroundColor = getTurnoColor(turno);
-      await saveTurnoToIndexedDB(fecha, turno);
+      await saveTurnoToIndexedDB(fecha, turno); // Guardar inmediatamente cada cambio
       await updateSummary();
     }
 
@@ -1011,9 +1084,8 @@
       renderCalendar();
     }
 
-    // Inicializar el calendario al cargar la página
     window.onload = () => renderCalendar();
   </script>
-
+ 
  </body>
 </html>

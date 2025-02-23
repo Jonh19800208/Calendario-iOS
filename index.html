@@ -680,13 +680,15 @@
 
 </head>
 <body>
- <!-- Script para guardar en IndexedDB -->
+ <!-- Script para guardar y cargar datos en IndexedDB -->
     <script>
-        // Función para inicializar IndexedDB
-        let db;
+        // Configuración de IndexedDB
         const dbName = 'calendarioDB';
-        const storeName = 'htmlContent';
+        const storeName = 'calendarioData';
 
+        let db;
+
+        // Función para inicializar IndexedDB
         function initIndexedDB() {
             return new Promise((resolve, reject) => {
                 const request = window.indexedDB.open(dbName, 1);
@@ -710,17 +712,17 @@
             });
         }
 
-        // Función para guardar el contenido del HTML en IndexedDB
-        async function saveToIndexedDB(htmlContent) {
+        // Función para guardar datos en IndexedDB
+        async function saveToIndexedDB(data) {
             await initIndexedDB();
 
             const transaction = db.transaction([storeName], 'readwrite');
             const objectStore = transaction.objectStore(storeName);
 
-            const request = objectStore.put({ id: 1, content: htmlContent });
+            const request = objectStore.put({ id: 1, data }); // Guardar con clave única
 
             request.onsuccess = () => {
-                console.log('Contenido guardado en IndexedDB');
+                console.log('Datos guardados en IndexedDB');
             };
 
             request.onerror = (event) => {
@@ -728,15 +730,69 @@
             };
         }
 
-        // Llama a la función cuando la página carga
+        // Función para cargar datos desde IndexedDB
+        async function loadFromIndexedDB() {
+            await initIndexedDB();
+
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readonly');
+                const objectStore = transaction.objectStore(storeName);
+
+                const request = objectStore.get(1); // Obtener el registro con id = 1
+
+                request.onsuccess = () => {
+                    if (request.result) {
+                        resolve(request.result.data); // Devolver los datos almacenados
+                    } else {
+                        resolve(null); // No hay datos almacenados
+                    }
+                };
+
+                request.onerror = (event) => {
+                    console.error('Error al cargar de IndexedDB:', event.target.error);
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        // Función para actualizar el contenido del HTML
+        function updateHTML(data) {
+            document.getElementById('mañanas').textContent = `Mañanas: ${data.mañanas || 0}`;
+            document.getElementById('tardes').textContent = `Tardes: ${data.tardes || 0}`;
+            document.getElementById('noches').textContent = `Noches: ${data.noches || 0}`;
+            document.getElementById('vacaciones-restantes').textContent = `Días de vacaciones restantes: ${data.vacacionesRestantes || 22}`;
+        }
+
+        // Llama a las funciones al cargar la página
         window.onload = async function () {
-            const htmlContent = document.documentElement.outerHTML; // Obtiene todo el HTML
-            await saveToIndexedDB(htmlContent); // Guarda el contenido al cargar la página
+            // Cargar datos desde IndexedDB
+            const savedData = await loadFromIndexedDB();
+
+            if (savedData) {
+                console.log('Datos cargados desde IndexedDB:', savedData);
+                updateHTML(savedData); // Actualizar el HTML con los datos cargados
+            } else {
+                console.log('No hay datos en IndexedDB. Usando valores predeterminados.');
+                const defaultData = {
+                    mañanas: 0,
+                    tardes: 0,
+                    noches: 0,
+                    vacacionesRestantes: 22
+                };
+                updateHTML(defaultData); // Usar valores predeterminados
+                await saveToIndexedDB(defaultData); // Guardar los valores predeterminados en IndexedDB
+            }
 
             // Observador para detectar cambios en el DOM
             const observer = new MutationObserver(() => {
-                const updatedHtmlContent = document.documentElement.outerHTML;
-                saveToIndexedDB(updatedHtmlContent); // Guarda el contenido si hay cambios
+                const updatedData = {
+                    mañanas: parseInt(document.getElementById('mañanas').textContent.split(': ')[1]),
+                    tardes: parseInt(document.getElementById('tardes').textContent.split(': ')[1]),
+                    noches: parseInt(document.getElementById('noches').textContent.split(': ')[1]),
+                    vacacionesRestantes: parseInt(document.getElementById('vacaciones-restantes').textContent.split(': ')[1])
+                };
+
+                saveToIndexedDB(updatedData); // Guardar los cambios en IndexedDB
             });
 
             // Configura el observador para vigilar todo el documento
@@ -747,5 +803,5 @@
             });
         };
     </script>
-</body>
+ </body>
 </html>
